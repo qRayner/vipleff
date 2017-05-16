@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script type="text/javascript">
+
+
+function localFile() {
+	var URL = window.URL || window.webkitURL;
+	var playFile = function (event) {
+		var file = this.files[0];
+		var fileURL = URL.createObjectURL(file);
+		var videoNode = document.querySelector('video');
+		videoNode.src = fileURL;
+	}
+	var inputNode = document.querySelector('input');
+	inputNode.addEventListener('change', playFile, false);
+}
+
+var process = {
+	doLoad: function() {
+		this.orig = document.getElementById("orig");
+		this.twin = document.getElementById("twin");
+		this.ctxTwin = this.twin.getContext("2d");
+		this.filtered = document.getElementById("filtered");
+		this.ctxFiltered = this.filtered.getContext("2d");
+		var self = this;
+		this.orig.addEventListener("playing", function() {
+				self.width = self.orig.videoWidth;
+				self.height = self.orig.videoHeight;
+				self.callback();
+		}, false);
+	},
+	callback: function() {
+		this.ctxTwin.drawImage(this.orig, 0, 0, this.orig.videoWidth, this.orig.videoHeight);
+		this.filter();
+		var self = this;
+		setTimeout(function() {self.callback();}, 0);
+	},
+	filter: function() {
+		var frame = this.ctxTwin.getImageData(0, 0, this.orig.videoWidth, this.orig.videoHeight);
+		grayscale(frame);
+		this.ctxFiltered.putImageData(frame, 0, 0);
+	}
+}
+
+function grayscale(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		var r = frame.data[i];
+		var g = frame.data[i+1];
+		var b = frame.data[i+2];
+		var grey = (r + g + b) / 3;
+		frame.data[i] = grey;
+	    frame.data[i+1] = grey;
+        frame.data[i+2] = grey;
+	}
+}
+
+</script>
+
+<html>
+<head>
+<title>HTML5 video player with effects</title>
+<style>
+div {
+	float: left;
+	margin: 5px;
+}
+</style>
+</head>
+
+<body onload="process.doLoad()">
+<header>
+<input type="file" accept="video/*"/ onchange=localFile()>
+</header>
+<div>
+<div>
+<h1>Original Video</h1>
+<video id="orig" controls autoplay ></video>
+</div>
+<div>
+<h1>Filtered Video</h1>
+<canvas id="filtered" width="800" height="600"/></canvas>
+</div>
+<div>
+<h1>Dummy Video</h1>
+<canvas id="twin" width="800" height="600"></canvas>
+</div>
+</div>
+</body>
+</html>
