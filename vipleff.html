@@ -37,7 +37,30 @@ var process = {
 	},
 	filter: function() {
 		var frame = this.ctxTwin.getImageData(0, 0, this.orig.videoWidth, this.orig.videoHeight);
-		grayscale(frame);
+		var filter = document.getElementById("filterSelect").value;
+		switch (filter) {
+			case "0":
+				break;
+			case "1":
+				grayscale(frame);
+				break;
+			case "2":
+				negative(frame);
+				break;
+			case "3":
+				sabattier(frame);
+				break;
+			case "20":
+				red(frame);
+				break;
+			case "21":
+				green(frame);
+				break;
+			case "22":
+				blue(frame);
+				break;
+			default:
+		}
 		this.ctxFiltered.putImageData(frame, 0, 0);
 	}
 }
@@ -54,6 +77,50 @@ function grayscale(frame) {
 	}
 }
 
+function negative(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		var r = frame.data[i];
+		var g = frame.data[i+1];
+		var b = frame.data[i+2];
+		frame.data[i] = 255 - r;
+	    frame.data[i+1] = 255 - g;
+        frame.data[i+2] = 255 - b;
+	}
+}
+
+function sabattier(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		var r = 127 * Math.cos(frame.data[i] * 2 * Math.PI / 255 + 20) + 128;
+		var g = 127 * Math.cos(frame.data[i+1] * 2 * Math.PI / 255 + 20) + 128;
+		var b = 127 * Math.cos(frame.data[i+2] * 2 * Math.PI / 255 + 20) + 128;
+		frame.data[i] = r;
+	    frame.data[i+1] = g;
+        frame.data[i+2] = b;
+	}
+}
+
+function red(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		frame.data[i+1] = 0;
+        frame.data[i+2] = 0;
+	}
+}
+
+function green(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		frame.data[i] = 0;
+        frame.data[i+2] = 0;
+	}
+}
+
+function blue(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		frame.data[i] = 0;
+        frame.data[i+1] = 0;
+	}
+}
+
+
 </script>
 
 <html>
@@ -69,7 +136,17 @@ div {
 
 <body onload="process.doLoad()">
 <header>
-<input type="file" accept="video/*"/ onchange=localFile()>
+  <input type="file" accept="video/*"/ onchange=localFile()>
+  Effect:
+  <select id="filterSelect">
+    <option value=0>none</option>
+    <option value=1>grayscale</option>
+	<option value=2>negative</option>
+	<option value=3>sabattier</option>
+	<option value=20>red</option>
+	<option value=21>green</option>
+	<option value=22>blue</option>
+  read</select>
 </header>
 <div>
 <div>
