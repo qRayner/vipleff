@@ -53,6 +53,15 @@ var process = {
 			case "4":
 				sepia(frame);
 				break;
+			case "5":
+				threshold(frame);
+				break;
+			case "6":
+				underwater(frame);
+				break;
+			case "7":
+				switchBlueRed(frame);
+				break;
 			case "20":
 				red(frame);
 				break;
@@ -137,6 +146,49 @@ function sepia(frame) {
         frame.data[i+1] = sepiaGreen;
         frame.data[i+2] = sepiaBlue;
     }
+}
+
+function threshold(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		var r = frame.data[i];
+		var g = frame.data[i+1];
+		var b = frame.data[i+2];
+		var grey = (r + g + b) / 3;
+		if(grey > 120){
+			frame.data[i] = 255;
+			frame.data[i+1] = 255;
+			frame.data[i+2] = 255;
+		}
+		else {
+		frame.data[i] = 0;
+	    frame.data[i+1] = 0;
+        frame.data[i+2] = 0;
+		}
+	}
+}
+
+function underwater(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		var r = frame.data[i];
+		var g = frame.data[i+1];
+		var b = frame.data[i+2];
+		var blueRed = r*0.5;
+		var blueGreen = b*0.5;
+		frame.data[i] = blueRed;
+	    frame.data[i+1] = blueGreen;
+        frame.data[i+2] = b;
+	}
+}
+
+function switchBlueRed(frame) {
+	for (var i = 0; i < frame.data.length; i += 4) {
+		var r = frame.data[i];
+		var g = frame.data[i+1];
+		var b = frame.data[i+2];
+		frame.data[i] = b;
+	    frame.data[i+1] = g;
+        frame.data[i+2] = r;
+	}
 }
 
 function red(frame) {
@@ -306,6 +358,9 @@ function oldS(frame) {
 				<option value=2>negative</option>
 				<option value=3>sabattier</option>
 				<option value=4>sepia</option>
+				<option value=5>threshold</option>
+				<option value=6>underwater</option>
+				<option value=7>switch blue red</option>
 				<option value=20>red</option>
 				<option value=21>green</option>
 				<option value=22>blue</option>
