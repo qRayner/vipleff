@@ -59,6 +59,9 @@ var process = {
 			case "22":
 				blue(frame);
 				break;
+			case "25":
+				colorReduction(frame);
+				break;
 			case "50":
 				var frame_gray = this.ctxTwin.getImageData(0, 0, this.orig.videoWidth, this.orig.videoHeight);
 				simpleEdge(frame, frame_gray, this.orig.videoWidth, this.orig.videoHeight);
@@ -66,6 +69,12 @@ var process = {
 			case "51":
 				var frame_gray = this.ctxTwin.getImageData(0, 0, this.orig.videoWidth, this.orig.videoHeight);
 				simpleSketch(frame, frame_gray, this.orig.videoWidth, this.orig.videoHeight);
+				break;
+			case "100":
+				saltAndPepperNoise(frame);
+				break;
+			case "200":
+				old(frame);
 				break;
 			default:
 		}
@@ -76,12 +85,12 @@ var process = {
 function grayscale(frame) {
 	for (var i = 0; i < frame.data.length; i += 4) {
 		var r = frame.data[i];
-		var g = frame.data[i+1];
-		var b = frame.data[i+2];
+		var g = frame.data[i + 1];
+		var b = frame.data[i + 2];
 		var grey = (r + g + b) / 3;
 		frame.data[i] = grey;
-	    frame.data[i+1] = grey;
-        frame.data[i+2] = grey;
+	    frame.data[i + 1] = grey;
+        frame.data[i + 2] = grey;
 	}
 }
 
@@ -102,29 +111,38 @@ function sabattier(frame) {
 		var g = 127 * Math.cos(frame.data[i+1] * 2 * Math.PI / 255 + 20) + 128;
 		var b = 127 * Math.cos(frame.data[i+2] * 2 * Math.PI / 255 + 20) + 128;
 		frame.data[i] = r;
-	    frame.data[i+1] = g;
-        frame.data[i+2] = b;
+	    frame.data[i + 1] = g;
+        frame.data[i + 2] = b;
 	}
 }
 
 function red(frame) {
 	for (var i = 0; i < frame.data.length; i += 4) {
-		frame.data[i+1] = 0;
-        frame.data[i+2] = 0;
+		frame.data[i + 1] = 0;
+        frame.data[i + 2] = 0;
 	}
 }
 
 function green(frame) {
 	for (var i = 0; i < frame.data.length; i += 4) {
 		frame.data[i] = 0;
-        frame.data[i+2] = 0;
+        frame.data[i + 2] = 0;
 	}
 }
 
 function blue(frame) {
 	for (var i = 0; i < frame.data.length; i += 4) {
 		frame.data[i] = 0;
-        frame.data[i+1] = 0;
+        frame.data[i + 1] = 0;
+	}
+}
+
+function colorReduction(frame) {
+	var reducedRange = 3;
+	for (var i = 0; i < frame.data.length; i += 4) {
+		frame.data[i] = Math.floor(frame.data[i] * reducedRange / 255) * 255 / reducedRange;
+        frame.data[i + 1] = Math.floor(frame.data[i + 1] * reducedRange / 255) * 255 / reducedRange;
+        frame.data[i + 2] = Math.floor(frame.data[i + 2] * reducedRange / 255) * 255 / reducedRange;
 	}
 }
 
@@ -186,50 +204,82 @@ function simpleSketch(frame, frame_gray, width, height) {
 	}
 }
 
+function saltAndPepperNoise(frame) {
+	var percentage = 0.01;
+	var pixel = frame.data.length / 4;
+	var amount = pixel * percentage / 100;
+	for (var i = 0; i < amount; ++i) {
+		var index = Math.floor(Math.random() * pixel) * 4;
+		var value = 0;
+		if (i > amount / 2) {
+			value = 255;
+		}
+		frame.data[index] = value;
+		frame.data[index + 1] = value;
+		frame.data[index + 2] = value;
+	}
+}
+
+function old(frame) {
+	if (Math.random() > 0.9) {
+		for (var i = 0; i < frame.data.length; i += 4) {
+			frame.data[i] = 0;
+			frame.data[i + 1] = 0;
+			frame.data[i + 2] = 0;
+		}
+	} else {
+		grayscale(frame);
+		saltAndPepperNoise(frame);
+	}
+}
+
 
 
 </script>
 
 <html>
-<head>
-<title>HTML5 video player with effects</title>
-<style>
-div {
-	float: left;
-	margin: 5px;
-}
-</style>
-</head>
+	<head>
+		<title>HTML5 video player with effects</title>
+		<style>
+			div {
+				float: left;
+				margin: 5px;
+			}
+		</style>
+	</head>
 
-<body onload="process.doLoad()">
-<header>
-  <input type="file" accept="video/*"/ onchange=localFile()>
-  Effect:
-  <select id="filterSelect">
-    <option value=0>none</option>
-    <option value=1>grayscale</option>
-	<option value=2>negative</option>
-	<option value=3>sabattier</option>
-	<option value=20>red</option>
-	<option value=21>green</option>
-	<option value=22>blue</option>
-	<option value=50>simpleEdges</option>
-	<option value=51>simpleSketch</option>
-  read</select>
-</header>
-<div>
-<div>
-<h1>Original Video</h1>
-<video id="orig" controls autoplay ></video>
-</div>
-<div>
-<h1>Filtered Video</h1>
-<canvas id="filtered" width="800" height="600"/></canvas>
-</div>
-<div hidden>
-<h1>Dummy Video</h1>
-<canvas id="twin" width="800" height="600"></canvas>
-</div>
-</div>
-</body>
+	<body onload="process.doLoad()">
+		<header>
+			<input type="file" accept="video/*"/ onchange=localFile()>
+			Effect:
+			<select id="filterSelect">
+				<option value=0>none</option>
+				<option value=1>grayscale</option>
+				<option value=2>negative</option>
+				<option value=3>sabattier</option>
+				<option value=20>red</option>
+				<option value=21>green</option>
+				<option value=22>blue</option>
+				<option value=25>color reduction</option>
+				<option value=50>simple edges</option>
+				<option value=51>simple sketch</option>
+				<option value=100>salt'n'pepper noise</option>
+				<option value=200>old</option>
+			</select>
+		</header>
+		<div>
+			<div>
+				<h1>Original Video</h1>
+				<video id="orig" controls autoplay ></video>
+			</div>
+			<div>
+				<h1>Filtered Video</h1>
+				<canvas id="filtered" width="800" height="600"/></canvas>
+			</div>
+			<div hidden>
+				<h1>Dummy Video</h1>
+				<canvas id="twin" width="800" height="600"></canvas>
+			</div>
+		</div>
+	</body>
 </html>
